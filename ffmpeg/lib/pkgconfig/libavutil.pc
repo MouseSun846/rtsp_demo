@@ -1,0 +1,14 @@
+prefix=/mnt/d/Code/FFmpeg/build
+exec_prefix=${prefix}
+libdir=/mnt/d/Code/FFmpeg/build/lib
+includedir=/mnt/d/Code/FFmpeg/build/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 58.27.100
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil 
+Libs.private: -pthread -lm -latomic
+Cflags: -I${includedir}
