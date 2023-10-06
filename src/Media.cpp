@@ -24,6 +24,7 @@ int ConvertYuvToBgr(int picCount, AVFrame *frame) {
     int dst_buffer_size = av_image_alloc(dst_data, dst_linesize, dst_width, dst_height, dst_pix_fmt, 1);
     if(dst_buffer_size < 0) {
         std::cerr<<"av_image_alloc failed!"<<std::endl;
+        return -1;
     }
 
     // 创建 SwsContext 对象
@@ -217,7 +218,5 @@ int openInput() {
         std::cout<<"runing..."<<std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(3));
     }
-        return 1;
-
     return 0;
 }
