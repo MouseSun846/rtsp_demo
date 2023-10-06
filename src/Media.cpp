@@ -5,8 +5,10 @@
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
 #include <opencv2/imgcodecs.hpp>
+#include <thread>
+#include <chrono>
 
-static int ConvertYuvToBgr(int picCount, AVFrame *frame) {
+int ConvertYuvToBgr(int picCount, AVFrame *frame) {
     // 设置源图像参数
     int src_width = frame->width;  // 图像宽度
     int src_height = frame->height;  // 图像高度
@@ -54,7 +56,7 @@ static int ConvertYuvToBgr(int picCount, AVFrame *frame) {
 }
 
 
-static int video_decode_example(const char *input_filename)
+int video_decode_example(const char *input_filename)
 {
     const AVCodec *codec = NULL;
     AVCodecContext *ctx= NULL;
@@ -139,7 +141,7 @@ static int video_decode_example(const char *input_filename)
     i = 0;
 
     result = 0;
-    int picCount = 0;
+    static int picCount = 0;
     while (result >= 0) {
         result = av_read_frame(fmt_ctx, pkt);
         if (result >= 0 && pkt->stream_index != video_stream) {
@@ -170,7 +172,7 @@ static int video_decode_example(const char *input_filename)
                 break;
             } else if (result < 0) {
                 std::cerr<<"Error decoding frame"<<std::endl;
-                return result;
+                goto finish;
             }
 
             number_of_written_bytes = av_image_copy_to_buffer(byte_buffer, byte_buffer_size,
@@ -179,7 +181,7 @@ static int video_decode_example(const char *input_filename)
             if (number_of_written_bytes < 0) {
                 std::cerr<<"Can't copy image to buffer"<<std::endl;
                 av_frame_unref(fr);
-                return number_of_written_bytes;
+                goto finish;
             }
 
             ConvertYuvToBgr(picCount, fr);
@@ -198,7 +200,7 @@ finish:
     avformat_close_input(&fmt_ctx);
     avcodec_free_context(&ctx);
     av_freep(&byte_buffer);
-    return 0;
+    return -1;
 }
 
 static void log_callback_help(void *ptr, int level, const char *fmt, va_list vl)
@@ -211,7 +213,10 @@ int openInput() {
     // av_log_set_callback(log_callback_help);  
     // if (video_decode_example("rtsp://admin:IVNEKL@192.168.1.2:554/h264/ch1/main/av_stream") != 0)
     //     return 1;      
-    if (video_decode_example("rtsp://192.168.1.3:8554/cam1") != 0)
+    while (video_decode_example("rtsp://192.168.1.3:8554/cam1") != 0) {
+        std::cout<<"runing..."<<std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+    }
         return 1;
 
     return 0;
