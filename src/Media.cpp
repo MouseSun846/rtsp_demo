@@ -2,6 +2,57 @@
 #include <iostream>
 #include <iomanip>
 #include "libavutil/log.h"
+#include "opencv2/core.hpp"
+#include "opencv2/imgproc.hpp"
+#include <opencv2/imgcodecs.hpp>
+
+static int ConvertYuvToBgr(int picCount, AVFrame *frame) {
+    // 设置源图像参数
+    int src_width = frame->width;  // 图像宽度
+    int src_height = frame->height;  // 图像高度
+    AVPixelFormat src_pix_fmt = (AVPixelFormat)frame->format;  // 像素格式
+    uint8_t * const src_data[4] = { frame->data[0], frame->data[1], frame->data[2], NULL };  // 图像数据
+
+    // 设置目标图像参数
+    int dst_width = src_width;
+    int dst_height = src_height;
+    AVPixelFormat dst_pix_fmt = AV_PIX_FMT_BGR24;
+    uint8_t *dst_data[4] = { NULL };
+    int dst_linesize[4] = { 0 };
+    int dst_buffer_size = av_image_alloc(dst_data, dst_linesize, dst_width, dst_height, dst_pix_fmt, 1);
+    if(dst_buffer_size < 0) {
+        std::cerr<<"av_image_alloc failed!"<<std::endl;
+    }
+
+    // 创建 SwsContext 对象
+    SwsContext *sws_ctx = sws_getContext(src_width, src_height, src_pix_fmt,
+                                        dst_width, dst_height, dst_pix_fmt,
+                                        SWS_BICUBIC, NULL, NULL, NULL);
+
+    // 转换图像数据
+    sws_scale(sws_ctx, src_data, frame->linesize, 0, src_height, dst_data, dst_linesize);
+
+    // 处理转换后的图像数据（在 dst_data 中）
+    cv::Mat bgrImage(dst_height, dst_width, CV_8UC3, dst_data[0], dst_linesize[0]);
+
+    if(picCount%100 == 0) {
+        std::string picName = "/mnt/d/Code/FFmpeg/example/out/";
+        picName += std::to_string(picCount);
+        picName += ".jpg";
+        // 写图
+        bool result = cv::imwrite(picName, bgrImage);
+        if(!result) {
+            std::cerr<<"cv::imwrite failed!"<<std::endl;
+        }
+    }
+
+
+    // 释放资源
+    av_freep(&dst_data[0]);
+    sws_freeContext(sws_ctx);    
+    return 0;
+}
+
 
 static int video_decode_example(const char *input_filename)
 {
@@ -88,6 +139,7 @@ static int video_decode_example(const char *input_filename)
     i = 0;
 
     result = 0;
+    int picCount = 0;
     while (result >= 0) {
         result = av_read_frame(fmt_ctx, pkt);
         if (result >= 0 && pkt->stream_index != video_stream) {
@@ -129,7 +181,10 @@ static int video_decode_example(const char *input_filename)
                 av_frame_unref(fr);
                 return number_of_written_bytes;
             }
-            std::cout <<"video_stream: "<< video_stream << ", " << fr->pts << ", " << fr->pkt_dts << ", " 
+
+            ConvertYuvToBgr(picCount, fr);
+            picCount++;
+            std::cout <<"pix_fmt:"<<ctx->pix_fmt<<" video_stream: "<< video_stream << ", " << fr->pts << ", " << fr->pkt_dts << ", " 
             << std::setw(8) << fr->duration << ", " << std::setw(8) << number_of_written_bytes << ", 0x" << std::setw(8) << std::setfill('0') << std::hex 
             << av_adler32_update(0, (const uint8_t*)byte_buffer, number_of_written_bytes) << std::dec << std::endl;
             av_frame_unref(fr);
@@ -156,7 +211,7 @@ int openInput() {
     // av_log_set_callback(log_callback_help);  
     // if (video_decode_example("rtsp://admin:IVNEKL@192.168.1.2:554/h264/ch1/main/av_stream") != 0)
     //     return 1;      
-    if (video_decode_example("rtsp://192.168.1.5:8554/cam1") != 0)
+    if (video_decode_example("rtsp://192.168.1.3:8554/cam1") != 0)
         return 1;
 
     return 0;

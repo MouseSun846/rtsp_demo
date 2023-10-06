@@ -31,9 +31,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fpermissive")
 
+find_package(OpenCV REQUIRED PATHS /mnt/d/Code/opencv/install/lib/cmake)
 
 #需要编译的文件所需要的头文件路径
-set(INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/../build/include)
+set(INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/../build/include /mnt/d/Code/opencv/install/include/opencv4/)
 
 include_directories(${INCLUDE_PATH})
 
@@ -41,7 +42,7 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/src SOURCES)
 
 add_library(rtsp_lib SHARED ${SOURCES})
 
-link_directories(/mnt/d/Code/FFmpeg/build/lib)
+
 find_library(AVCODEC_LIBRARY avcodec PATHS "/mnt/d/Code/FFmpeg/build/lib")
 find_library(AVDEVICE_LIBRARY avdevice PATHS "/mnt/d/Code/FFmpeg/build/lib")
 find_library(AVFILTER_LIBRARY avfilter PATHS "/mnt/d/Code/FFmpeg/build/lib")
@@ -50,6 +51,10 @@ find_library(AVUTIL_LIBRARY avutil PATHS "/mnt/d/Code/FFmpeg/build/lib")
 find_library(SWRESAMPLE_LIBRARY swresample PATHS "/mnt/d/Code/FFmpeg/build/lib")
 find_library(SWSCALE_LIBRARY swscale PATHS "/mnt/d/Code/FFmpeg/build/lib")
 
+find_library(OPENCV_CORE_LIBRARY opencv_core PATHS "/mnt/d/Code/opencv/install/lib")
+find_library(OPENCV_IMGPROC_LIBRARY opencv_imgproc PATHS "/mnt/d/Code/opencv/install/lib")
+find_library(OPENCV_IMGCODECS_LIBRARY opencv_imgcodecs PATHS "/mnt/d/Code/opencv/install/lib")
+
 message("AVCODEC_LIBRARY=${AVCODEC_LIBRARY}")
 message("AVDEVICE_LIBRARY=${AVDEVICE_LIBRARY}")
 message("AVFILTER_LIBRARY=${AVFILTER_LIBRARY}")
@@ -57,6 +62,10 @@ message("AVFORMAT_LIBRARY=${AVFORMAT_LIBRARY}")
 message("AVUTIL_LIBRARY=${AVUTIL_LIBRARY}")
 message("SWRESAMPLE_LIBRARY=${SWRESAMPLE_LIBRARY}")
 message("SWSCALE_LIBRARY=${SWSCALE_LIBRARY}")
+message("OPENCV_CORE_LIBRARY=${OPENCV_CORE_LIBRARY}")
+message("OPENCV_IMGPROC_LIBRARY=${OPENCV_IMGPROC_LIBRARY}")
+message("OPENCV_IMGCODECS_LIBRARY=${OPENCV_IMGCODECS_LIBRARY}")
+
 
 target_link_libraries(rtsp_lib PUBLIC
   ${AVCODEC_LIBRARY}
@@ -66,6 +75,9 @@ target_link_libraries(rtsp_lib PUBLIC
   ${AVUTIL_LIBRARY}
   ${SWRESAMPLE_LIBRARY}
   ${SWSCALE_LIBRARY}
+  ${OPENCV_CORE_LIBRARY}
+  ${OPENCV_IMGPROC_LIBRARY}
+  ${OPENCV_IMGCODECS_LIBRARY}
   pthread
   m 
   atomic 

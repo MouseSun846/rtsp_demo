@@ -5,6 +5,7 @@ extern "C"
     #include "libavformat/avformat.h"
     #include "libavutil/imgutils.h"
     #include "libavutil/timestamp.h"
+    #include "libswscale/swscale.h"
 }
 
 int openInput();
